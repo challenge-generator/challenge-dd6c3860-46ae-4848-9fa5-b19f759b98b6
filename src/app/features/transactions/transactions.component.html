@@ -1,0 +1,201 @@
+<div class="transactions-container">
+  <header class="transactions-header">
+    <h1 class="transactions-header__title">Gestión de Transacciones</h1>
+    <p class="transactions-header__subtitle">
+      Administra tus transacciones bancarias utilizando diferentes patrones asíncronos
+    </p>
+  </header>
+
+  <div class="transactions-layout">
+    <section class="transactions-form-section">
+      <mat-card class="form-card">
+        <mat-card-header>
+          <mat-card-title>Nueva Transacción</mat-card-title>
+          <mat-card-subtitle>Selecciona el patrón asíncrono a utilizar</mat-card-subtitle>
+        </mat-card-header>
+
+        <mat-card-content>
+          <form class="transaction-form" (ngSubmit)="$event.preventDefault()">
+            <mat-form-field appearance="outline" class="form-field">
+              <mat-label>Monto</mat-label>
+              <input
+                matInput
+                type="number"
+                min="0.01"
+                step="0.01"
+                [value]="formData().amount"
+                (input)="updateForm('amount', $any($event.target).valueAsNumber)"
+                placeholder="0.00"
+              />
+              <span matTextPrefix>$&nbsp;</span>
+              <mat-error>El monto debe ser mayor a 0</mat-error>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="form-field">
+              <mat-label>Tipo de Transacción</mat-label>
+              <mat-select
+                [value]="formData().type"
+                (selectionChange)="updateForm('type', $event.value)"
+              >
+                @for (const type of transactionTypes; track type) {
+                  <mat-option [value]="type">
+                    {{ typeLabels[type] }}
+                  </mat-option>
+                }
+              </mat-select>
+            </mat-form-field>
+
+            @if (formData().type === 'transfer') {
+              <mat-form-field appearance="outline" class="form-field form-field--full">
+                <mat-label>Cuenta Destino</mat-label>
+                <input
+                  matInput
+                  type="text"
+                  [value]="formData().destinationAccount"
+                  (input)="updateForm('destinationAccount', $any($event.target).value)"
+                  placeholder="ACC-XXX"
+                />
+                <mat-hint>Ingrese el número de cuenta destino</mat-hint>
+              </mat-form-field>
+            }
+
+            <mat-form-field appearance="outline" class="form-field form-field--full">
+              <mat-label>Descripción</mat-label>
+              <textarea
+                matInput
+                [value]="formData().description"
+                (input)="updateForm('description', $any($event.target).value)"
+                placeholder="Descripción de la transacción"
+                rows="3"
+              ></textarea>
+            </mat-form-field>
+
+            <div class="form-actions">
+              <button
+                mat-raised-button
+                color="primary"
+                class="action-button action-button--callback"
+                [disabled]="isLoading() || !canProcess()"
+                (click)="processWithCallback()"
+              >
+                <mat-icon>call</mat-icon>
+                Callback
+              </button>
+
+              <button
+                mat-raised-button
+                color="accent"
+                class="action-button action-button--promise"
+                [disabled]="isLoading() || !canProcess()"
+                (click)="processWithPromise()"
+              >
+                <mat-icon>pending</mat-icon>
+                Promise
+              </button>
+
+              <button
+                mat-raised-button
+                color="warn"
+                class="action-button action-button--async"
+                [disabled]="isLoading() || !canProcess()"
+                (click)="processWithAsyncAwait()"
+              >
+                <mat-icon>bolt</mat-icon>
+                Async/Await
+              </button>
+            </div>
+
+            <button
+              mat-stroked-button
+              type="button"
+              class="clear-button"
+              (click)="clearForm()"
+            >
+              Limpiar Formulario
+            </button>
+          </form>
+        </mat-card-content>
+      </mat-card>
+
+      @if (isLoading()) {
+        <div class="loading-overlay">
+          <mat-spinner diameter="48"></mat-spinner>
+          <p class="loading-text">Procesando transacción con {{ patternUsed() }}...</p>
+        </div>
+      }
+
+      @if (errorMessage()) {
+        <div class="error-banner">
+          <mat-icon>error_outline</mat-icon>
+          <span>{{ errorMessage() }}</span>
+          <button mat-icon-button (click)="errorMessage.set(null)">
+            <mat-icon>close</mat-icon>
+          </button>
+        </div>
+      }
+
+      @if (currentTransactionId()) {
+        <div class="success-banner">
+          <mat-icon>check_circle</mat-icon>
+          <div class="success-content">
+            <span>Transacción procesada exitosamente</span>
+            <span class="transaction-id">ID: {{ currentTransactionId() }}</span>
+          </div>
+          <button
+            mat-stroked-button
+            class="check-status-button"
+            (click)="checkTransactionStatus(currentTransactionId()!)"
+          >
+            Verificar Estado
+          </button>
+        </div>
+      }
+    </section>
+
+    <section class="transactions-list-section">
+      <mat-card class="list-card">
+        <mat-card-header>
+          <mat-card-title>Transacciones Recientes</mat-card-title>
+          <mat-card-subtitle>Historial de transacciones de la cuenta</mat-card-subtitle>
+        </mat-card-header>
+
+        <mat-card-content>
+          @if (transactions().length === 0) {
+            <div class="empty-state">
+              <mat-icon>receipt_long</mat-icon>
+              <p>No hay transacciones recientes</p>
+            </div>
+          } @else {
+            <mat-list class="transactions-list">
+              @for (const txn of transactions(); track txn.id) {
+                <mat-list-item class="transaction-item">
+                  <div class="transaction-item__icon" [class]="'transaction-item__icon--' + txn.type">
+                    <mat-icon>{{ getTransactionIcon(txn.type) }}</mat-icon>
+                  </div>
+                  <div class="transaction-item__details">
+                    <span class="transaction-item__type">{{ typeLabels[txn.type] }}</span>
+                    <span class="transaction-item__description">{{ txn.description || 'Sin descripción' }}</span>
+                    <span class="transaction-item__date">{{ txn.timestamp | date:'medium' }}</span>
+                  </div>
+                  <div class="transaction-item__amount" [class]="'transaction-item__amount--' + (isPositiveTransaction(txn.type) ? 'positive' : 'negative')">
+                    {{ formatAmount(txn.amount, txn.type) }}
+                  </div>
+                  <app-transaction-status [status]="txn.status"></app-transaction-status>
+                </mat-list-item>
+              }
+            </mat-list>
+          }
+
+          <button
+            mat-stroked-button
+            class="refresh-button"
+            (click)="loadRecentTransactions()"
+          >
+            <mat-icon>refresh</mat-icon>
+            Actualizar
+          </button>
+        </mat-card-content>
+      </mat-card>
+    </section>
+  </div>
+</div>

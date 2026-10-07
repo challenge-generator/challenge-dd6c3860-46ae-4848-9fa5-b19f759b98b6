@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <title>Angular Banking Transactions</title>
+  <base href="/">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Aplicación de transacciones bancarias con Angular - Gestión de operaciones asíncronas">
+  <meta name="theme-color" content="#1976d2">
+  
+  <!-- Favicon -->
+  <link rel="icon" type="image/x-icon" href="favicon.ico">
+  <link rel="apple-touch-icon" sizes="180x180" href="assets/icons/apple-touch-icon.png">
+  
+  <!-- Preconnect para optimización de carga -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  
+  <!-- Fuentes - Material Icons -->
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  
+  <!-- Estilos globales -->
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <!-- Componente raíz donde Angular monta la aplicación -->
+  <app-root>
+    <!-- Loading inicial mientras Angular bootstrapea -->
+    <div class="app-loading">
+      <div class="spinner-container">
+        <div class="spinner">
+          <div class="spinner-circle"></div>
+          <div class="spinner-circle"></div>
+          <div class="spinner-circle"></div>
+        </div>
+        <p class="loading-text">Cargando Aplicación de Transacciones...</p>
+        <p class="loading-subtitle">Sistema Bancario - Módulo de Gestión</p>
+      </div>
+    </div>
+    
+    <!-- Fallback para browsers sin JavaScript -->
+    <noscript>
+      <div style="padding: 40px; text-align: center; font-family: Arial, sans-serif;">
+        <h1>JavaScript Requerido</h1>
+        <p>Esta aplicación requiere JavaScript para funcionar.</p>
+        <p>Por favor, habilite JavaScript en su navegador.</p>
+      </div>
+    </noscript>
+  </app-root>
+  
+  <!-- Scripts críticos inline para evitar FOUC -->
+  <script>
+    // Detectar si el navegador soporta ES6+
+    (function() {
+      try {
+        new Function('async () => {}')();
+        console.log('[Browser] Soporte para ES6+ detectado');
+      } catch (e) {
+        document.body.innerHTML = '<div style="padding:40px;text-align:center;"><h1>Navegador no compatible</h1><p>Por favor, actualice su navegador a una versión moderna.</p></div>';
+      }
+    })();
+    
+    // Tracking de rendimiento inicial
+    window.addEventListener('load', function() {
+      if (window.performance && window.performance.timing) {
+        var timing = window.performance.timing;
+        var loadTime = timing.loadEventEnd - timing.navigationStart;
+        console.log('[Performance] Tiempo de carga:', loadTime, 'ms');
+      }
+    });
+  </script>
+</body>
+</html>

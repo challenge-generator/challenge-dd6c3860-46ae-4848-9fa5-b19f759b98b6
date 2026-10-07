@@ -1,0 +1,68 @@
+<div 
+  class="transaction-status"
+  [ngClass]="statusClass()"
+  [attr.aria-status]="status"
+  role="status"
+  aria-live="polite">
+  
+  <div class="transaction-status__icon-container" [ngClass]="statusClass() + '__icon-container'">
+    <span class="material-icons transaction-status__icon" aria-hidden="true">
+      {{ displayIcon() }}
+    </span>
+    <div class="transaction-status__icon-glow" *ngIf="status === 'pending'"></div>
+  </div>
+
+  <div class="transaction-status__content">
+    <div class="transaction-status__header">
+      <h3 class="transaction-status__title">{{ displayLabel() }}</h3>
+      <span 
+        class="transaction-status__badge" 
+        *ngIf="isFinalState()"
+        [ngClass]="'transaction-status__badge--' + status">
+        {{ status.toUpperCase() }}
+      </span>
+    </div>
+
+    <p class="transaction-status__description" *ngIf="shouldShowDetails()">
+      {{ displayDescription() }}
+    </p>
+
+    <div class="transaction-status__meta" *ngIf="shouldShowDetails() && transactionId">
+      <span class="transaction-status__meta-label">ID de transacción:</span>
+      <code class="transaction-status__meta-value">{{ formattedId() }}</code>
+      <button 
+        class="transaction-status__copy-btn"
+        (click)="onCopyId()"
+        aria-label="Copiar ID de transacción"
+        title="Copiar ID">
+        <span class="material-icons">content_copy</span>
+      </button>
+    </div>
+  </div>
+
+  <div class="transaction-status__actions" *ngIf="!compact && canRetryAction()">
+    <button 
+      class="transaction-status__action-btn transaction-status__action-btn--primary"
+      (click)="onRetry()"
+      aria-label="Reintentar transacción">
+      <span class="material-icons" aria-hidden="true">refresh</span>
+      Reintentar
+    </button>
+    <button 
+      class="transaction-status__action-btn transaction-status__action-btn--secondary"
+      (click)="onContactSupport()"
+      aria-label="Contactar soporte">
+      <span class="material-icons" aria-hidden="true">support_agent</span>
+      Contactar
+    </button>
+  </div>
+
+  <div class="transaction-status__progress" *ngIf="status === 'pending'">
+    <div class="transaction-status__progress-bar"></div>
+  </div>
+
+  <div class="transaction-status__timestamp" *ngIf="shouldShowDetails()">
+    <span class="material-icons transaction-status__timestamp-icon">schedule</span>
+    <span class="transaction-status__timestamp-text">Actualizado: {{ now | date:'medium' }}</span>
+  </div>
+</div>
